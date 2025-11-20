@@ -1,0 +1,25 @@
+[package]
+name = "odincode-api"
+version = "0.1.0"
+edition = "2021"
+authors = ["OdinCode Development Team"]
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+chrono = { workspace = true }
+axum = { workspace = true, features = ["macros"] }
+tower = { workspace = true }
+tower-http = { workspace = true }
+reqwest = { workspace = true }
+odincode-core = { path = "../core" }
+odincode-ltmc = { path = "../ltmc" }
+odincode-agents = { path = "../agents" }
+odincode-tools = { path = "../tools" }

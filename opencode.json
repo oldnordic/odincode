@@ -1,0 +1,35 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "z-ai/glm-4.5-coding-plan",
+  "instructions": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "QWEN.md"
+  ],
+  "provider": {
+    "zhipuai": {
+      "api": "https://api.z.ai/api/coding/paas/v4"
+    }
+  },
+  "permission": {
+    "edit": "ask",
+    "bash": {
+      "cargo build*": "allow",
+      "cargo test*": "allow",
+      "cargo check*": "allow",
+      "cargo clippy*": "allow",
+      "cargo fmt*": "allow",
+      "cargo run*": "allow",
+      "git status": "allow",
+      "git diff": "allow",
+      "git log*": "allow",
+      "git push": "ask",
+      "git push --force*": "deny",
+      "rm -rf*": "deny",
+      "docker-compose*": "allow",
+      "docker*": "ask",
+      "*": "ask"
+    },
+    "webfetch": "allow"
+  }
+}

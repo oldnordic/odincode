@@ -1,0 +1,141 @@
+# Rust build artifacts
+target/
+Cargo.lock
+
+# Documentation and markdown files
+docs/
+*.md
+!README.md
+
+# Test files outside tests directory
+**/test_*
+**/debug_*
+test_*
+debug_*
+
+# Binary executables
+*.exe
+*.bin
+*.app
+*.deb
+*.rpm
+*.dmg
+*.pkg
+
+# Configuration files
+config.toml
+*.toml
+!Cargo.toml
+!.mcp.json
+
+# Environment and secrets
+.env
+.env.*
+*.key
+*.pem
+*.crt
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS generated files
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and runtime data
+*.log
+logs/
+*.output
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary directories
+tmp/
+temp/
+.cache/
+
+# LTMC data files
+data/
+*.sqlite
+*.faiss
+*.db
+
+# Vendor and dependencies
+/vendor/
+
+# Build scripts and tools
+extract_*.sh
+clean_*.sh
+*.sh
+!scripts/
+
+# AI and ML model files
+*.model
+*.pkl
+*.joblib
+models/
+
+# Cache and backup files
+.cache/
+*.bak
+*.backup
+.aider*
+
+# JSON data files (excluding config)
+*.json
+!.mcp.json
+!opencode.json
+
+# Research and analysis files
+research/
+analysis/
+reports/
+
+# Dead code archives
+dead_code_archive/
+dead_code_reports/
+
+# Methodology papers
+methodology_papers/
+
+# Audit files
+audit/
+
+# Desktop dashboard
+desktop-dashboard/
+
+# Scanner output
+scanner/
+
+# FAISS output
+faiss_output/
+
+# CatBoost info
+catboost_info/
+
+# Claude hooks
+claude_code_hooks/
+
+# Fix directories
+fixes/
+
+# LTMC migration
+ltmc-migration/
+
+# Packaging
+packaging/
+
+# Example configurations
+*.example
+.env.example

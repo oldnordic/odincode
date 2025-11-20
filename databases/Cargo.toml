@@ -1,0 +1,25 @@
+[package]
+name = "odincode-databases"
+version = "0.1.0"
+edition = "2021"
+authors = ["OdinCode Development Team"]
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+chrono = { workspace = true }
+sqlx = { workspace = true, features = ["sqlite", "runtime-tokio-rustls", "chrono", "uuid"] }
+rusqlite = { workspace = true, features = ["bundled"] }
+redis = { workspace = true }
+neo4rs = { workspace = true }
+faiss = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.8"

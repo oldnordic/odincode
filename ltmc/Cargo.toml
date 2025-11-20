@@ -1,0 +1,35 @@
+[package]
+name = "odincode-ltmc"
+version = "0.1.0"
+edition = "2021"
+authors = ["OdinCode Development Team"]
+
+[features]
+default = ["ltmc-lite"]
+# LTMC feature flags for optional compilation
+ltmc-lite = []  # Basic LTMC with SQLite only
+ltmc-full = []  # Complete LTMC with all databases
+ltmc-redis = ["redis"]  # Redis support for caching
+ltmc-neo4j = ["neo4rs"]  # Neo4j support for graph operations
+ltmc-faiss = ["faiss"]  # FAISS support for vector operations
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+chrono = { workspace = true }
+sqlx = { workspace = true }
+rusqlite = { workspace = true }
+# Optional dependencies based on features
+redis = { workspace = true, optional = true }
+neo4rs = { workspace = true, optional = true }
+faiss = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true }
+tempfile = { workspace = true }
+odincode-databases = { path = "../databases" }

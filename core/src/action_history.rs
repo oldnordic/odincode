@@ -1,14 +1,14 @@
 //! Action history module for OdinCode
-//! 
+//!
 //! This module provides comprehensive logging of all actions, tool calls,
 //! file modifications, and AI decisions for ML feedback and verification.
 
 use anyhow::Result;
-use sqlx::{SqlitePool, Row};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use sqlx::{Row, SqlitePool};
 use std::collections::HashMap;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 /// Action history manager
 pub struct ActionHistoryManager {
@@ -122,8 +122,10 @@ impl ActionHistoryManager {
                 token_usage INTEGER,
                 metadata TEXT
             )
-            "#
-        ).execute(&self.pool).await?;
+            "#,
+        )
+        .execute(&self.pool)
+        .await?;
 
         // Create file snapshots table
         sqlx::query(
@@ -137,8 +139,10 @@ impl ActionHistoryManager {
                 hash TEXT NOT NULL,
                 FOREIGN KEY (action_id) REFERENCES actions (id) ON DELETE CASCADE
             )
-            "#
-        ).execute(&self.pool).await?;
+            "#,
+        )
+        .execute(&self.pool)
+        .await?;
 
         // Create AI decisions table
         sqlx::query(
@@ -153,18 +157,36 @@ impl ActionHistoryManager {
                 timestamp INTEGER NOT NULL,
                 FOREIGN KEY (action_id) REFERENCES actions (id) ON DELETE CASCADE
             )
-            "#
-        ).execute(&self.pool).await?;
+            "#,
+        )
+        .execute(&self.pool)
+        .await?;
 
         // Create indexes for performance
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_timestamp ON actions(timestamp)").execute(&self.pool).await?;
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_session ON actions(session_id)").execute(&self.pool).await?;
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_type ON actions(action_type)").execute(&self.pool).await?;
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_file ON actions(file_path)").execute(&self.pool).await?;
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_tool ON actions(tool_name)").execute(&self.pool).await?;
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_snapshots_action ON file_snapshots(action_id)").execute(&self.pool).await?;
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_snapshots_file ON file_snapshots(file_path)").execute(&self.pool).await?;
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_decisions_action ON ai_decisions(action_id)").execute(&self.pool).await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_timestamp ON actions(timestamp)")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_session ON actions(session_id)")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_type ON actions(action_type)")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_file ON actions(file_path)")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_actions_tool ON actions(tool_name)")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_snapshots_action ON file_snapshots(action_id)")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_snapshots_file ON file_snapshots(file_path)")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_decisions_action ON ai_decisions(action_id)")
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
     }
@@ -184,8 +206,11 @@ impl ActionHistoryManager {
         let action_id = Uuid::new_v4().to_string();
         let timestamp = Utc::now().timestamp();
 
-        let parameters_json = parameters.as_ref().map(|p| serde_json::to_string(p).unwrap_or_default());
-        let metadata_json = Some(serde_json::to_string(&HashMap::<String, String>::new()).unwrap_or_default());
+        let parameters_json = parameters
+            .as_ref()
+            .map(|p| serde_json::to_string(p).unwrap_or_default());
+        let metadata_json =
+            Some(serde_json::to_string(&HashMap::<String, String>::new()).unwrap_or_default());
 
         sqlx::query(
             r#"
@@ -269,8 +294,11 @@ impl ActionHistoryManager {
         let action_id = Uuid::new_v4().to_string();
         let timestamp = Utc::now().timestamp();
 
-        let parameters_json = parameters.as_ref().map(|p| serde_json::to_string(p).unwrap_or_default());
-        let metadata_json = Some(serde_json::to_string(&HashMap::<String, String>::new()).unwrap_or_default());
+        let parameters_json = parameters
+            .as_ref()
+            .map(|p| serde_json::to_string(p).unwrap_or_default());
+        let metadata_json =
+            Some(serde_json::to_string(&HashMap::<String, String>::new()).unwrap_or_default());
 
         sqlx::query(
             r#"
@@ -319,7 +347,7 @@ impl ActionHistoryManager {
             INSERT INTO actions 
             (id, action_type, timestamp, session_id, parameters, success, error_message)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            "#
+            "#,
         )
         .bind(&action_id)
         .bind(ActionType::TodoCreation.as_str())
@@ -348,7 +376,10 @@ impl ActionHistoryManager {
 
         let mut parameters = HashMap::new();
         parameters.insert("todo_id".to_string(), todo_id.to_string());
-        parameters.insert("completion_evidence".to_string(), completion_evidence.to_string());
+        parameters.insert(
+            "completion_evidence".to_string(),
+            completion_evidence.to_string(),
+        );
         let parameters_json = serde_json::to_string(&parameters).unwrap_or_default();
 
         sqlx::query(
@@ -356,7 +387,7 @@ impl ActionHistoryManager {
             INSERT INTO actions 
             (id, action_type, timestamp, session_id, parameters, success, error_message)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            "#
+            "#,
         )
         .bind(&action_id)
         .bind(ActionType::TodoCompletion.as_str())
@@ -387,7 +418,7 @@ impl ActionHistoryManager {
             INSERT INTO file_snapshots 
             (id, action_id, file_path, content, timestamp, hash)
             VALUES (?, ?, ?, ?, ?, ?)
-            "#
+            "#,
         )
         .bind(&snapshot_id)
         .bind(action_id)
@@ -443,7 +474,7 @@ impl ActionHistoryManager {
             FROM actions
             WHERE session_id = ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(session_id)
         .fetch_all(&self.pool)
@@ -452,12 +483,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -495,7 +526,7 @@ impl ActionHistoryManager {
             FROM actions
             WHERE action_type = ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(action_type.as_str())
         .fetch_all(&self.pool)
@@ -504,12 +535,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -545,7 +576,7 @@ impl ActionHistoryManager {
             FROM file_snapshots
             WHERE action_id = ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(action_id)
         .fetch_all(&self.pool)
@@ -587,8 +618,12 @@ impl ActionHistoryManager {
                 action_id: row.get("action_id"),
                 reasoning_chain: row.get("reasoning_chain"),
                 confidence_score: row.get("confidence_score"),
-                alternatives_considered: row.get::<Option<i64>, _>("alternatives_considered").map(|a| a as u32),
-                selected_alternative: row.get::<Option<i64>, _>("selected_alternative").map(|s| s as u32),
+                alternatives_considered: row
+                    .get::<Option<i64>, _>("alternatives_considered")
+                    .map(|a| a as u32),
+                selected_alternative: row
+                    .get::<Option<i64>, _>("selected_alternative")
+                    .map(|s| s as u32),
                 timestamp: row.get("timestamp"),
             });
         }
@@ -606,7 +641,7 @@ impl ActionHistoryManager {
             FROM actions
             ORDER BY timestamp DESC
             LIMIT ?
-            "#
+            "#,
         )
         .bind(limit as i64)
         .fetch_all(&self.pool)
@@ -615,12 +650,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -650,11 +685,10 @@ impl ActionHistoryManager {
 
     /// Get action statistics
     pub async fn get_action_statistics(&self) -> Result<HashMap<String, u32>> {
-        let rows = sqlx::query(
-            "SELECT action_type, COUNT(*) as count FROM actions GROUP BY action_type"
-        )
-        .fetch_all(&self.pool)
-        .await?;
+        let rows =
+            sqlx::query("SELECT action_type, COUNT(*) as count FROM actions GROUP BY action_type")
+                .fetch_all(&self.pool)
+                .await?;
 
         let mut stats = HashMap::new();
         for row in rows {
@@ -668,17 +702,15 @@ impl ActionHistoryManager {
 
     /// Get successful vs failed action counts
     pub async fn get_success_failure_counts(&self) -> Result<(u32, u32)> {
-        let success_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM actions WHERE success = TRUE"
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let success_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM actions WHERE success = TRUE")
+                .fetch_one(&self.pool)
+                .await?;
 
-        let failure_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM actions WHERE success = FALSE"
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let failure_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM actions WHERE success = FALSE")
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok((success_count as u32, failure_count as u32))
     }
@@ -686,7 +718,7 @@ impl ActionHistoryManager {
     /// Get average action duration
     pub async fn get_average_duration(&self) -> Result<Option<f64>> {
         let avg_duration: Option<f64> = sqlx::query_scalar(
-            "SELECT AVG(duration_ms) FROM actions WHERE duration_ms IS NOT NULL"
+            "SELECT AVG(duration_ms) FROM actions WHERE duration_ms IS NOT NULL",
         )
         .fetch_one(&self.pool)
         .await?;
@@ -697,7 +729,7 @@ impl ActionHistoryManager {
     /// Get total token usage
     pub async fn get_total_token_usage(&self) -> Result<u64> {
         let total_tokens: Option<i64> = sqlx::query_scalar(
-            "SELECT SUM(token_usage) FROM actions WHERE token_usage IS NOT NULL"
+            "SELECT SUM(token_usage) FROM actions WHERE token_usage IS NOT NULL",
         )
         .fetch_one(&self.pool)
         .await?;
@@ -706,7 +738,11 @@ impl ActionHistoryManager {
     }
 
     /// Get actions by time range
-    pub async fn get_actions_by_time_range(&self, start_time: i64, end_time: i64) -> Result<Vec<Action>> {
+    pub async fn get_actions_by_time_range(
+        &self,
+        start_time: i64,
+        end_time: i64,
+    ) -> Result<Vec<Action>> {
         let rows = sqlx::query(
             r#"
             SELECT id, action_type, timestamp, session_id, user_id, tool_name, file_path, 
@@ -715,7 +751,7 @@ impl ActionHistoryManager {
             FROM actions
             WHERE timestamp >= ? AND timestamp <= ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(start_time)
         .bind(end_time)
@@ -725,12 +761,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -784,7 +820,7 @@ impl ActionHistoryManager {
             WHERE success = FALSE
             ORDER BY timestamp DESC
             LIMIT ?
-            "#
+            "#,
         )
         .bind(limit as i64)
         .fetch_all(&self.pool)
@@ -793,12 +829,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -836,7 +872,7 @@ impl ActionHistoryManager {
             FROM actions
             WHERE tool_name = ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(tool_name)
         .fetch_all(&self.pool)
@@ -845,12 +881,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -888,7 +924,7 @@ impl ActionHistoryManager {
             FROM actions
             WHERE file_path = ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(file_path)
         .fetch_all(&self.pool)
@@ -897,12 +933,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -931,17 +967,19 @@ impl ActionHistoryManager {
     }
 
     /// Batch update action metadata
-    pub async fn batch_update_metadata(&self, action_ids: &[String], metadata: &HashMap<String, String>) -> Result<()> {
+    pub async fn batch_update_metadata(
+        &self,
+        action_ids: &[String],
+        metadata: &HashMap<String, String>,
+    ) -> Result<()> {
         let metadata_json = serde_json::to_string(metadata)?;
-        
+
         for action_id in action_ids {
-            sqlx::query(
-                "UPDATE actions SET metadata = ? WHERE id = ?"
-            )
-            .bind(&metadata_json)
-            .bind(action_id)
-            .execute(&self.pool)
-            .await?;
+            sqlx::query("UPDATE actions SET metadata = ? WHERE id = ?")
+                .bind(&metadata_json)
+                .bind(action_id)
+                .execute(&self.pool)
+                .await?;
         }
 
         Ok(())
@@ -957,7 +995,7 @@ impl ActionHistoryManager {
             FROM actions
             WHERE metadata LIKE ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(format!("%\"{}\":\"{}\"%", key, value))
         .fetch_all(&self.pool)
@@ -966,12 +1004,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -1001,12 +1039,10 @@ impl ActionHistoryManager {
 
     /// Delete old actions (older than specified timestamp)
     pub async fn delete_old_actions(&self, older_than: i64) -> Result<u64> {
-        let result = sqlx::query(
-            "DELETE FROM actions WHERE timestamp < ?"
-        )
-        .bind(older_than)
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("DELETE FROM actions WHERE timestamp < ?")
+            .bind(older_than)
+            .execute(&self.pool)
+            .await?;
 
         Ok(result.rows_affected())
     }
@@ -1030,7 +1066,7 @@ impl ActionHistoryManager {
             FROM actions
             WHERE user_id = ?
             ORDER BY timestamp
-            "#
+            "#,
         )
         .bind(user_id)
         .fetch_all(&self.pool)
@@ -1039,12 +1075,12 @@ impl ActionHistoryManager {
         let mut actions = Vec::new();
         for row in rows {
             let action_type = self.str_to_action_type(row.get::<&str, _>("action_type"))?;
-            let parameters: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("parameters")
-                    .and_then(|s| serde_json::from_str(s).ok());
-            let metadata: Option<HashMap<String, String>> = 
-                row.get::<Option<&str>, _>("metadata")
-                    .and_then(|s| serde_json::from_str(s).ok());
+            let parameters: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("parameters")
+                .and_then(|s| serde_json::from_str(s).ok());
+            let metadata: Option<HashMap<String, String>> = row
+                .get::<Option<&str>, _>("metadata")
+                .and_then(|s| serde_json::from_str(s).ok());
 
             actions.push(Action {
                 id: row.get("id"),
@@ -1115,29 +1151,30 @@ impl ActionHistoryManager {
 mod tests {
     use super::*;
     use sqlx::SqlitePool;
-    use tempfile::TempDir;
     use std::collections::HashMap;
+    use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_action_history_creation() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Test that tables were created by inserting and retrieving an action
-        let action_id = manager.log_tool_call(
-            "test_session",
-            "test_tool",
-            None,
-            Some("test result".to_string()),
-            true,
-            None,
-            Some(100),
-            Some(50),
-        ).await?;
+        let action_id = manager
+            .log_tool_call(
+                "test_session",
+                "test_tool",
+                None,
+                Some("test result".to_string()),
+                true,
+                None,
+                Some(100),
+                Some(50),
+            )
+            .await?;
 
         let actions = manager.get_actions_by_session("test_session").await?;
         assert_eq!(actions.len(), 1);
@@ -1153,23 +1190,24 @@ mod tests {
 
     #[tokio::test]
     async fn test_file_modification_logging() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
-        let action_id = manager.log_file_modification(
-            "test_session",
-            "/test/file.rs",
-            Some(10),
-            Some(5),
-            Some("old content".to_string()),
-            Some("new content".to_string()),
-            true,
-            None,
-        ).await?;
+        let action_id = manager
+            .log_file_modification(
+                "test_session",
+                "/test/file.rs",
+                Some(10),
+                Some(5),
+                Some("old content".to_string()),
+                Some("new content".to_string()),
+                true,
+                None,
+            )
+            .await?;
 
         let actions = manager.get_actions_by_file("/test/file.rs").await?;
         assert_eq!(actions.len(), 1);
@@ -1186,31 +1224,35 @@ mod tests {
 
     #[tokio::test]
     async fn test_ai_decision_logging() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
-        let action_id = manager.log_ai_decision(
-            "test_session",
-            "Reasoning chain here",
-            Some(0.85),
-            Some(5),
-            Some(2),
-            None,
-            Some("AI result".to_string()),
-            true,
-            None,
-            Some(200),
-            Some(100),
-        ).await?;
+        let action_id = manager
+            .log_ai_decision(
+                "test_session",
+                "Reasoning chain here",
+                Some(0.85),
+                Some(5),
+                Some(2),
+                None,
+                Some("AI result".to_string()),
+                true,
+                None,
+                Some(200),
+                Some(100),
+            )
+            .await?;
 
         let actions = manager.get_actions_by_type(ActionType::AiDecision).await?;
         assert_eq!(actions.len(), 1);
         assert_eq!(actions[0].id, action_id);
-        assert_eq!(actions[0].ai_reasoning, Some("Reasoning chain here".to_string()));
+        assert_eq!(
+            actions[0].ai_reasoning,
+            Some("Reasoning chain here".to_string())
+        );
         assert_eq!(actions[0].success, true);
         assert_eq!(actions[0].duration_ms, Some(200));
         assert_eq!(actions[0].token_usage, Some(100));
@@ -1220,34 +1262,41 @@ mod tests {
 
     #[tokio::test]
     async fn test_todo_logging() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
-        let creation_id = manager.log_todo_creation(
-            "test_session",
-            "Implement feature X",
-            "todo_123",
-            true,
-            None,
-        ).await?;
+        let creation_id = manager
+            .log_todo_creation(
+                "test_session",
+                "Implement feature X",
+                "todo_123",
+                true,
+                None,
+            )
+            .await?;
 
-        let completion_id = manager.log_todo_completion(
-            "test_session",
-            "todo_123",
-            "Feature X implemented successfully",
-            true,
-            None,
-        ).await?;
+        let completion_id = manager
+            .log_todo_completion(
+                "test_session",
+                "todo_123",
+                "Feature X implemented successfully",
+                true,
+                None,
+            )
+            .await?;
 
-        let creation_actions = manager.get_actions_by_type(ActionType::TodoCreation).await?;
+        let creation_actions = manager
+            .get_actions_by_type(ActionType::TodoCreation)
+            .await?;
         assert_eq!(creation_actions.len(), 1);
         assert_eq!(creation_actions[0].id, creation_id);
 
-        let completion_actions = manager.get_actions_by_type(ActionType::TodoCompletion).await?;
+        let completion_actions = manager
+            .get_actions_by_type(ActionType::TodoCompletion)
+            .await?;
         assert_eq!(completion_actions.len(), 1);
         assert_eq!(completion_actions[0].id, completion_id);
 
@@ -1256,32 +1305,30 @@ mod tests {
 
     #[tokio::test]
     async fn test_file_snapshot_storage() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // First create an action
-        let action_id = manager.log_tool_call(
-            "test_session",
-            "test_tool",
-            None,
-            Some("test result".to_string()),
-            true,
-            None,
-            None,
-            None,
-        ).await?;
+        let action_id = manager
+            .log_tool_call(
+                "test_session",
+                "test_tool",
+                None,
+                Some("test result".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         // Then store a file snapshot
-        let snapshot_id = manager.store_file_snapshot(
-            &action_id,
-            "/test/file.rs",
-            "file content here",
-            "abc123",
-        ).await?;
+        let snapshot_id = manager
+            .store_file_snapshot(&action_id, "/test/file.rs", "file content here", "abc123")
+            .await?;
 
         let snapshots = manager.get_file_snapshots(&action_id).await?;
         assert_eq!(snapshots.len(), 1);
@@ -1296,42 +1343,48 @@ mod tests {
 
     #[tokio::test]
     async fn test_ai_decision_storage() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // First create an action
-        let action_id = manager.log_ai_decision(
-            "test_session",
-            "Reasoning chain",
-            Some(0.9),
-            Some(3),
-            Some(1),
-            None,
-            Some("AI result".to_string()),
-            true,
-            None,
-            None,
-            None,
-        ).await?;
+        let action_id = manager
+            .log_ai_decision(
+                "test_session",
+                "Reasoning chain",
+                Some(0.9),
+                Some(3),
+                Some(1),
+                None,
+                Some("AI result".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         // Then store an AI decision
-        let decision_id = manager.store_ai_decision(
-            &action_id,
-            "Detailed reasoning chain with multiple steps",
-            Some(0.85),
-            Some(5),
-            Some(2),
-        ).await?;
+        let decision_id = manager
+            .store_ai_decision(
+                &action_id,
+                "Detailed reasoning chain with multiple steps",
+                Some(0.85),
+                Some(5),
+                Some(2),
+            )
+            .await?;
 
         let decisions = manager.get_ai_decisions(&action_id).await?;
         assert_eq!(decisions.len(), 1);
         assert_eq!(decisions[0].id, decision_id);
         assert_eq!(decisions[0].action_id, action_id);
-        assert_eq!(decisions[0].reasoning_chain, "Detailed reasoning chain with multiple steps");
+        assert_eq!(
+            decisions[0].reasoning_chain,
+            "Detailed reasoning chain with multiple steps"
+        );
         assert_eq!(decisions[0].confidence_score, Some(0.85));
         assert_eq!(decisions[0].alternatives_considered, Some(5));
         assert_eq!(decisions[0].selected_alternative, Some(2));
@@ -1341,20 +1394,61 @@ mod tests {
 
     #[tokio::test]
     async fn test_action_statistics() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions of different types
-        manager.log_tool_call("session1", "tool1", None, Some("result1".to_string()), true, None, None, None).await?;
-        manager.log_tool_call("session1", "tool2", None, Some("result2".to_string()), true, None, None, None).await?;
-        manager.log_file_modification("session1", "/file1.rs", None, None, None, None, true, None).await?;
-        manager.log_file_modification("session1", "/file2.rs", None, None, None, None, true, None).await?;
-        manager.log_file_modification("session1", "/file3.rs", None, None, None, None, true, None).await?;
-        manager.log_ai_decision("session1", "reasoning", Some(0.8), Some(3), Some(1), None, Some("result".to_string()), true, None, None, None).await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool1",
+                None,
+                Some("result1".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool2",
+                None,
+                Some("result2".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+        manager
+            .log_file_modification("session1", "/file1.rs", None, None, None, None, true, None)
+            .await?;
+        manager
+            .log_file_modification("session1", "/file2.rs", None, None, None, None, true, None)
+            .await?;
+        manager
+            .log_file_modification("session1", "/file3.rs", None, None, None, None, true, None)
+            .await?;
+        manager
+            .log_ai_decision(
+                "session1",
+                "reasoning",
+                Some(0.8),
+                Some(3),
+                Some(1),
+                None,
+                Some("result".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         let stats = manager.get_action_statistics().await?;
         assert_eq!(stats.get("tool_call"), Some(&2));
@@ -1370,17 +1464,49 @@ mod tests {
 
     #[tokio::test]
     async fn test_recent_actions() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions with different timestamps
-        manager.log_tool_call("session1", "tool1", None, Some("result1".to_string()), true, None, Some(100), Some(50)).await?;
-        manager.log_tool_call("session1", "tool2", None, Some("result2".to_string()), true, None, Some(200), Some(75)).await?;
-        manager.log_tool_call("session1", "tool3", None, Some("result3".to_string()), true, None, Some(300), Some(100)).await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool1",
+                None,
+                Some("result1".to_string()),
+                true,
+                None,
+                Some(100),
+                Some(50),
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool2",
+                None,
+                Some("result2".to_string()),
+                true,
+                None,
+                Some(200),
+                Some(75),
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool3",
+                None,
+                Some("result3".to_string()),
+                true,
+                None,
+                Some(300),
+                Some(100),
+            )
+            .await?;
 
         let recent_actions = manager.get_recent_actions(2).await?;
         assert_eq!(recent_actions.len(), 2);
@@ -1393,19 +1519,73 @@ mod tests {
 
     #[tokio::test]
     async fn test_action_queries() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions
-        manager.log_tool_call("session1", "formatter", None, Some("formatted".to_string()), true, None, None, Some(25)).await?;
-        manager.log_tool_call("session1", "linter", None, Some("linted".to_string()), true, None, None, Some(30)).await?;
-        manager.log_tool_call("session2", "formatter", None, Some("formatted".to_string()), true, None, None, Some(20)).await?;
-        manager.log_file_modification("session1", "/src/main.rs", None, None, None, None, true, None).await?;
-        manager.log_file_modification("session1", "/src/lib.rs", None, None, None, None, true, None).await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "formatter",
+                None,
+                Some("formatted".to_string()),
+                true,
+                None,
+                None,
+                Some(25),
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "linter",
+                None,
+                Some("linted".to_string()),
+                true,
+                None,
+                None,
+                Some(30),
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session2",
+                "formatter",
+                None,
+                Some("formatted".to_string()),
+                true,
+                None,
+                None,
+                Some(20),
+            )
+            .await?;
+        manager
+            .log_file_modification(
+                "session1",
+                "/src/main.rs",
+                None,
+                None,
+                None,
+                None,
+                true,
+                None,
+            )
+            .await?;
+        manager
+            .log_file_modification(
+                "session1",
+                "/src/lib.rs",
+                None,
+                None,
+                None,
+                None,
+                true,
+                None,
+            )
+            .await?;
 
         // Query by tool
         let formatter_actions = manager.get_actions_by_tool("formatter").await?;
@@ -1423,8 +1603,16 @@ mod tests {
         let common_tools = manager.get_most_common_tools(5).await?;
         assert_eq!(common_tools.len(), 2);
         // Formatter should appear twice, linter once
-        let formatter_count = common_tools.iter().find(|(tool, _)| tool == "formatter").map(|(_, count)| *count).unwrap();
-        let linter_count = common_tools.iter().find(|(tool, _)| tool == "linter").map(|(_, count)| *count).unwrap();
+        let formatter_count = common_tools
+            .iter()
+            .find(|(tool, _)| tool == "formatter")
+            .map(|(_, count)| *count)
+            .unwrap();
+        let linter_count = common_tools
+            .iter()
+            .find(|(tool, _)| tool == "linter")
+            .map(|(_, count)| *count)
+            .unwrap();
         assert_eq!(formatter_count, 2);
         assert_eq!(linter_count, 1);
 
@@ -1432,8 +1620,16 @@ mod tests {
         let modified_files = manager.get_most_modified_files(5).await?;
         assert_eq!(modified_files.len(), 2);
         // Both files should appear once
-        let main_rs_count = modified_files.iter().find(|(file, _)| file == "/src/main.rs").map(|(_, count)| *count).unwrap();
-        let lib_rs_count = modified_files.iter().find(|(file, _)| file == "/src/lib.rs").map(|(_, count)| *count).unwrap();
+        let main_rs_count = modified_files
+            .iter()
+            .find(|(file, _)| file == "/src/main.rs")
+            .map(|(_, count)| *count)
+            .unwrap();
+        let lib_rs_count = modified_files
+            .iter()
+            .find(|(file, _)| file == "/src/lib.rs")
+            .map(|(_, count)| *count)
+            .unwrap();
         assert_eq!(main_rs_count, 1);
         assert_eq!(lib_rs_count, 1);
 
@@ -1442,35 +1638,64 @@ mod tests {
 
     #[tokio::test]
     async fn test_action_metadata() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions
-        let action_id1 = manager.log_tool_call("session1", "tool1", None, Some("result1".to_string()), true, None, None, None).await?;
-        let action_id2 = manager.log_tool_call("session1", "tool2", None, Some("result2".to_string()), true, None, None, None).await?;
+        let action_id1 = manager
+            .log_tool_call(
+                "session1",
+                "tool1",
+                None,
+                Some("result1".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+        let action_id2 = manager
+            .log_tool_call(
+                "session1",
+                "tool2",
+                None,
+                Some("result2".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         // Add metadata to actions
         let mut metadata1 = HashMap::new();
         metadata1.insert("category".to_string(), "formatting".to_string());
         metadata1.insert("priority".to_string(), "high".to_string());
-        
+
         let mut metadata2 = HashMap::new();
         metadata2.insert("category".to_string(), "linting".to_string());
         metadata2.insert("priority".to_string(), "medium".to_string());
 
-        manager.batch_update_metadata(&[action_id1.clone()], &metadata1).await?;
-        manager.batch_update_metadata(&[action_id2.clone()], &metadata2).await?;
+        manager
+            .batch_update_metadata(&[action_id1.clone()], &metadata1)
+            .await?;
+        manager
+            .batch_update_metadata(&[action_id2.clone()], &metadata2)
+            .await?;
 
         // Query actions by metadata
-        let formatting_actions = manager.get_actions_with_metadata("category", "formatting").await?;
+        let formatting_actions = manager
+            .get_actions_with_metadata("category", "formatting")
+            .await?;
         assert_eq!(formatting_actions.len(), 1);
         assert_eq!(formatting_actions[0].id, action_id1);
 
-        let linting_actions = manager.get_actions_with_metadata("category", "linting").await?;
+        let linting_actions = manager
+            .get_actions_with_metadata("category", "linting")
+            .await?;
         assert_eq!(linting_actions.len(), 1);
         assert_eq!(linting_actions[0].id, action_id2);
 
@@ -1479,27 +1704,50 @@ mod tests {
 
     #[tokio::test]
     async fn test_action_deletion() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions with different timestamps
-        manager.log_tool_call("session1", "tool1", None, Some("result1".to_string()), true, None, None, None).await?;
-        
+        manager
+            .log_tool_call(
+                "session1",
+                "tool1",
+                None,
+                Some("result1".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+
         // Wait a bit to ensure different timestamps
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-        
-        manager.log_tool_call("session1", "tool2", None, Some("result2".to_string()), true, None, None, None).await?;
+
+        manager
+            .log_tool_call(
+                "session1",
+                "tool2",
+                None,
+                Some("result2".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         // Get total count before deletion
         let total_before = manager.get_total_action_count().await?;
         assert_eq!(total_before, 2);
 
-        // Delete old actions (this should delete nothing since we're using a future timestamp)
-        let deleted_count = manager.delete_old_actions(chrono::Utc::now().timestamp() + 1000).await?;
+        // Delete old actions (this should delete nothing since we're using a timestamp older than all actions)
+        let deleted_count = manager
+            .delete_old_actions(chrono::Utc::now().timestamp() - 1000)
+            .await?;
         assert_eq!(deleted_count, 0);
 
         // Get total count after deletion attempt
@@ -1511,17 +1759,49 @@ mod tests {
 
     #[tokio::test]
     async fn test_action_performance_metrics() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions with performance metrics
-        manager.log_tool_call("session1", "slow_tool", None, Some("result1".to_string()), true, None, Some(1000), Some(200)).await?;
-        manager.log_tool_call("session1", "fast_tool", None, Some("result2".to_string()), true, None, Some(50), Some(25)).await?;
-        manager.log_tool_call("session1", "medium_tool", None, Some("result3".to_string()), true, None, Some(250), Some(75)).await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "slow_tool",
+                None,
+                Some("result1".to_string()),
+                true,
+                None,
+                Some(1000),
+                Some(200),
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "fast_tool",
+                None,
+                Some("result2".to_string()),
+                true,
+                None,
+                Some(50),
+                Some(25),
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "medium_tool",
+                None,
+                Some("result3".to_string()),
+                true,
+                None,
+                Some(250),
+                Some(75),
+            )
+            .await?;
 
         // Get average duration
         let avg_duration = manager.get_average_duration().await?;
@@ -1538,37 +1818,73 @@ mod tests {
 
     #[tokio::test]
     async fn test_action_time_range_queries() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions with different timestamps
         let start_time = chrono::Utc::now().timestamp();
-        
-        manager.log_tool_call("session1", "tool1", None, Some("result1".to_string()), true, None, None, None).await?;
-        
+
+        manager
+            .log_tool_call(
+                "session1",
+                "tool1",
+                None,
+                Some("result1".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        
+
         let middle_time = chrono::Utc::now().timestamp();
-        
-        manager.log_tool_call("session1", "tool2", None, Some("result2".to_string()), true, None, None, None).await?;
-        
+
+        manager
+            .log_tool_call(
+                "session1",
+                "tool2",
+                None,
+                Some("result2".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        
+
         let end_time = chrono::Utc::now().timestamp();
-        
-        manager.log_tool_call("session1", "tool3", None, Some("result3".to_string()), true, None, None, None).await?;
+
+        manager
+            .log_tool_call(
+                "session1",
+                "tool3",
+                None,
+                Some("result3".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         // Query actions in the middle time range
-        let middle_actions = manager.get_actions_by_time_range(start_time, middle_time).await?;
+        let middle_actions = manager
+            .get_actions_by_time_range(start_time, middle_time)
+            .await?;
         // Should include first two actions (first action is definitely in range, second might be depending on timing)
         assert!(!middle_actions.is_empty());
 
         // Query actions in the full time range
-        let all_actions = manager.get_actions_by_time_range(start_time, end_time).await?;
+        let all_actions = manager
+            .get_actions_by_time_range(start_time, end_time)
+            .await?;
         // Should include all actions
         assert_eq!(all_actions.len(), 3);
 
@@ -1577,24 +1893,59 @@ mod tests {
 
     #[tokio::test]
     async fn test_failed_action_tracking() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions - some successful, some failed
-        manager.log_tool_call("session1", "good_tool", None, Some("success".to_string()), true, None, None, None).await?;
-        manager.log_tool_call("session1", "bad_tool", None, None, false, Some("Something went wrong".to_string()), None, None).await?;
-        manager.log_tool_call("session1", "another_good_tool", None, Some("also success".to_string()), true, None, None, None).await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "good_tool",
+                None,
+                Some("success".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "bad_tool",
+                None,
+                None,
+                false,
+                Some("Something went wrong".to_string()),
+                None,
+                None,
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "another_good_tool",
+                None,
+                Some("also success".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         // Get failed actions
         let failed_actions = manager.get_failed_actions(10).await?;
         assert_eq!(failed_actions.len(), 1);
         assert_eq!(failed_actions[0].tool_name, Some("bad_tool".to_string()));
         assert_eq!(failed_actions[0].success, false);
-        assert_eq!(failed_actions[0].error_message, Some("Something went wrong".to_string()));
+        assert_eq!(
+            failed_actions[0].error_message,
+            Some("Something went wrong".to_string())
+        );
 
         // Get success/failure counts
         let (success_count, failure_count) = manager.get_success_failure_counts().await?;
@@ -1606,26 +1957,58 @@ mod tests {
 
     #[tokio::test]
     async fn test_user_specific_actions() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Create test actions for different users
         let mut parameters1 = HashMap::new();
         parameters1.insert("user_id".to_string(), "user1".to_string());
-        
+
         let mut parameters2 = HashMap::new();
         parameters2.insert("user_id".to_string(), "user2".to_string());
-        
+
         let mut parameters3 = HashMap::new();
         parameters3.insert("user_id".to_string(), "user1".to_string());
 
-        manager.log_tool_call("session1", "tool1", Some(parameters1), Some("result1".to_string()), true, None, None, None).await?;
-        manager.log_tool_call("session1", "tool2", Some(parameters2), Some("result2".to_string()), true, None, None, None).await?;
-        manager.log_tool_call("session1", "tool3", Some(parameters3), Some("result3".to_string()), true, None, None, None).await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool1",
+                Some(parameters1),
+                Some("result1".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool2",
+                Some(parameters2),
+                Some("result2".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
+        manager
+            .log_tool_call(
+                "session1",
+                "tool3",
+                Some(parameters3),
+                Some("result3".to_string()),
+                true,
+                None,
+                None,
+                None,
+            )
+            .await?;
 
         // Get actions by user (note: in this simplified test, we're not actually storing user_id in the actions table)
         // This would require modifying the schema to include user_id as a separate column
@@ -1638,51 +2021,56 @@ mod tests {
 
     #[tokio::test]
     async fn test_action_lifecycle() -> Result<()> {
-        let temp_dir = TempDir::new()?;
-        let db_path = temp_dir.path().join("test.db");
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path.display())).await?;
-        
+        // Use in-memory database for tests - faster and more reliable
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+
         let manager = ActionHistoryManager::new(pool.clone());
         manager.init().await?;
 
         // Test the complete lifecycle of creating, querying, and getting statistics for actions
-        
+
         // 1. Create various types of actions
-        let tool_action_id = manager.log_tool_call(
-            "test_session", 
-            "test_tool", 
-            None, 
-            Some("tool result".to_string()), 
-            true, 
-            None, 
-            Some(100), 
-            Some(50)
-        ).await?;
-        
-        let file_action_id = manager.log_file_modification(
-            "test_session", 
-            "/test/file.rs", 
-            Some(10), 
-            Some(5), 
-            Some("old".to_string()), 
-            Some("new".to_string()), 
-            true, 
-            None
-        ).await?;
-        
-        let ai_action_id = manager.log_ai_decision(
-            "test_session", 
-            "AI reasoning", 
-            Some(0.85), 
-            Some(3), 
-            Some(1), 
-            None, 
-            Some("AI result".to_string()), 
-            true, 
-            None, 
-            Some(200), 
-            Some(100)
-        ).await?;
+        let tool_action_id = manager
+            .log_tool_call(
+                "test_session",
+                "test_tool",
+                None,
+                Some("tool result".to_string()),
+                true,
+                None,
+                Some(100),
+                Some(50),
+            )
+            .await?;
+
+        let file_action_id = manager
+            .log_file_modification(
+                "test_session",
+                "/test/file.rs",
+                Some(10),
+                Some(5),
+                Some("old".to_string()),
+                Some("new".to_string()),
+                true,
+                None,
+            )
+            .await?;
+
+        let ai_action_id = manager
+            .log_ai_decision(
+                "test_session",
+                "AI reasoning",
+                Some(0.85),
+                Some(3),
+                Some(1),
+                None,
+                Some("AI result".to_string()),
+                true,
+                None,
+                Some(200),
+                Some(100),
+            )
+            .await?;
 
         // 2. Verify actions were created
         let all_actions = manager.get_actions_by_session("test_session").await?;
@@ -1693,7 +2081,9 @@ mod tests {
         assert_eq!(tool_actions.len(), 1);
         assert_eq!(tool_actions[0].id, tool_action_id);
 
-        let file_actions = manager.get_actions_by_type(ActionType::FileModification).await?;
+        let file_actions = manager
+            .get_actions_by_type(ActionType::FileModification)
+            .await?;
         assert_eq!(file_actions.len(), 1);
         assert_eq!(file_actions[0].id, file_action_id);
 
@@ -1730,7 +2120,7 @@ mod tests {
         // 9. Test performance metrics
         let avg_duration = manager.get_average_duration().await?;
         assert!(avg_duration.is_some());
-        
+
         let total_tokens = manager.get_total_token_usage().await?;
         assert_eq!(total_tokens, 150); // 50 + 100
 

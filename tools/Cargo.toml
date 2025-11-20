@@ -1,0 +1,32 @@
+[package]
+name = "odincode-tools"
+version = "0.1.0"
+edition = "2021"
+authors = ["OdinCode Development Team"]
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+futures-util = "0.3"
+chrono = { workspace = true }
+regex = { workspace = true }
+bytes = "1.0"
+reqwest = { version = "0.11", features = ["json", "stream"] }
+dirs = "5.0"
+glob = "0.3"
+tempfile = "3.8"
+criterion = { version = "0.5", features = ["html_reports"] }
+odincode-core = { path = "../core" }
+odincode-ltmc = { path = "../ltmc" }
+odincode-agents = { path = "../agents" }
+
+[[bench]]
+name = "anthropic_bench"
+harness = false
