@@ -6,6 +6,7 @@ Cargo.lock
 docs/
 *.md
 !README.md
+!MODULARIZATION_REPORT.md
 
 # Test files outside tests directory
 **/test_*
