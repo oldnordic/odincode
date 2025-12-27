@@ -1,0 +1,9 @@
+{
+  "model": "codellama",
+  "created_at": "2024-01-15T12:00:00Z",
+  "message": {
+    "role": "assistant",
+    "content": "{\n  \"plan_id\": \"plan_ollama_test\",\n  \"intent\": \"QUERY\",\n  \"steps\": [{\n    \"step_id\": \"step_1\",\n    \"tool\": \"file_search\",\n    \"arguments\": {\"pattern\": \"test\", \"root\": \".\"},\n    \"precondition\": \"root exists\",\n    \"requires_confirmation\": false\n  }],\n  \"evidence_referenced\": [\"Q1\"]\n}\n"
+  },
+  "done": true
+}

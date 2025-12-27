@@ -1,0 +1,18 @@
+{
+  "id": "chat-123",
+  "created": 1677652288,
+  "model": "GLM-4.7",
+  "choices": [{
+    "index": 0,
+    "message": {
+      "role": "assistant",
+      "content": "{\n  \"plan_id\": \"plan_glm_test\",\n  \"intent\": \"READ\",\n  \"steps\": [{\n    \"step_id\": \"step_1\",\n    \"tool\": \"file_read\",\n    \"arguments\": {\"path\": \"src/main.rs\"},\n    \"precondition\": \"file exists\",\n    \"requires_confirmation\": false\n  }],\n  \"evidence_referenced\": [\"Q1\"]\n}\n"
+    },
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 10,
+    "completion_tokens": 20,
+    "total_tokens": 30
+  }
+}

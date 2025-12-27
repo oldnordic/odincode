@@ -1,0 +1,30 @@
+[package]
+name = "odincode"
+version = "0.0.1"
+edition = "2021"
+authors = ["OdinCode Contributors"]
+description = "Factual tool substrate for LLM-powered refactoring"
+license = "MIT"
+
+[dependencies]
+thiserror = "2.0"
+glob = "0.3"
+rusqlite = "0.32"
+anyhow = "1.0"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+uuid = { version = "1.0", features = ["v4"] }
+ratatui = "0.29"
+crossterm = "0.28"
+ureq = { version = "2.10", features = ["json"] }
+
+[dev-dependencies]
+tempfile = "3.13"
+
+[[bin]]
+name = "odincode"
+path = "src/main.rs"
+
+[lib]
+name = "odincode"
+path = "src/lib.rs"

@@ -1,0 +1,21 @@
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"{\n  \""}},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"plan_id\": \"plan_glm_sse\""},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"\",\n  \"intent\": \"READ\",\n  \""},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"steps\": [{\n    \"step_id\": \"step_1\","},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"\n    \"tool\": \"file_read\",\n    \""},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"arguments\": {\"path\": \"src/lib.rs\"},"},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"\n    \"precondition\": \"file exists\",\n    \""},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"requires_confirmation\": false\n  }],\n  \""},"finish_reason":null}],"created":1677652288,"model":"GLM-4.7"}
+
+data: {"id":"chat-123","choices":[{"index":0,"delta":{"content":"evidence_referenced\": [\"Q1\"]\n}\n"},"finish_reason":"stop"}],"created":1677652288,"model":"GLM-4.7"}
+
+data: [DONE]

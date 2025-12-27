@@ -1,0 +1,45 @@
+# Build artifacts
+target/
+*.o
+*.so
+*.dylib
+*.dll
+
+# Databases (generated at runtime)
+*.db
+*.db-shm
+*.db-wal
+codegraph.db
+execution_log.db
+syncore_*.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.*.swp
+
+# Cache directories
+.fastembed_cache/
+.claude/
+
+# Test temp directories
+tests/temp/
+
+# Lock files (Cargo.lock is generated)
+Cargo.lock
+
+# Local config (user-specific)
+config.toml
+
+# Debug and log files
+*.log
+
+# macOS
+.DS_Store
+
+# Backup files
+*.bak
+*.tmp
